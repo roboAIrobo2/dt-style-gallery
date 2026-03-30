@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draw Things スタイルテンプレート一覧 (コピー機能付き)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 30px 0 10px;
+    background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  .stats {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat-badge {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #a5b4fc;
+  }
+
+  .filter-bar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 8px 16px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: #ccc;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.5);
+    color: #fff;
+  }
+
+  .filter-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-color: #6366f1;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .search-box {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+
+  .search-box input {
+    width: 400px;
+    max-width: 90vw;
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    color: #e0e0e0;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.2s;
+  }
+
+  .search-box input:focus {
+    border-color: #6366f1;
+  }
+
+  .category-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 40px 0 16px;
+    padding: 10px 20px;
+    background: linear-gradient(90deg, rgba(99,102,241,0.15), transparent);
+    border-left: 4px solid #6366f1;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+    background: rgba(255,255,255,0.07);
+  }
+
+  .card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .card-body {
+    padding: 10px 12px 12px;
+  }
+
+  .card-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #e8e8ff;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-desc {
+    font-size: 0.75rem;
+    color: #888;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    h1 { font-size: 1.4rem; }
+  }
+
+  /* Modal CSS */
+  .modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+    opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  .modal.show { opacity: 1; visibility: visible; }
+  .modal-content {
+    background: #1e1e2d; border: 1px solid rgba(99, 102, 241, 0.4);
+    border-radius: 16px; padding: 24px;
+    width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+    position: relative;
+    transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .modal.show .modal-content { transform: translateY(0) scale(1); }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.1); border: none; color: #fff;
+    width: 32px; height: 32px; border-radius: 50%;
+    font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
+    display: flex; justify-content: center; align-items: center;
+  }
+  .modal-close:hover { background: rgba(239, 68, 68, 0.8); }
+  .modal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-right: 40px; }
+  .modal-header img { width: 64px; height: 64px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; }
+  .modal-title { font-size: 1.4rem; font-weight: 700; color: #fff; }
+  .prompt-box {
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 16px; margin-bottom: 16px;
+  }
+  .prompt-label { font-size: 0.85rem; color: #a5b4fc; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .prompt-text { font-family: 'Courier New', Courier, monospace; font-size: 0.95rem; color: #e0e0e0; line-height: 1.5; word-wrap: break-word; }
+  .prompt-empty { color: #888; font-style: italic; }
+
+  /* コピーボタン */
+  .copy-btn {
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.5);
+    color: #a5b4fc;
+    padding: 3px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { background: rgba(99, 102, 241, 0.5); color: #fff; }
+  .copy-btn.copied { background: #10b981; border-color: #059669; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>🎨 Draw Things スタイルテンプレート一覧</h1>
+<p class="subtitle">全130種類のスタイルテンプレートとアイコン（アプリ内蔵アセットから抽出）</p>
+
+<div class="stats">
+  <span class="stat-badge">📦 全130テンプレート</span>
+  <span class="stat-badge">🖼️ 128×128px アイコン</span>
+  <span class="stat-badge">📂 10カテゴリ</span>
+</div>
+
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="🔍 テンプレート名で検索..." oninput="filterCards()">
+</div>
+
+<div class="filter-bar" id="filterBar">
+  <button class="filter-btn active" data-cat="all" onclick="setFilter('all', this)">すべて</button>
+  <button class="filter-btn" data-cat="cinematic" onclick="setFilter('cinematic', this)">🎬 シネマティック・写真</button>
+  <button class="filter-btn" data-cat="anime" onclick="setFilter('anime', this)">🎌 アニメ・イラスト</button>
+  <button class="filter-btn" data-cat="painting" onclick="setFilter('painting', this)">🖼️ 絵画・美術</button>
+  <button class="filter-btn" data-cat="dark" onclick="setFilter('dark', this)">🔮 ファンタジー・ダーク</button>
+  <button class="filter-btn" data-cat="future" onclick="setFilter('future', this)">🤖 未来・SF</button>
+  <button class="filter-btn" data-cat="game" onclick="setFilter('game', this)">🎮 ゲーム</button>
+  <button class="filter-btn" data-cat="3d" onclick="setFilter('3d', this)">🧊 3D・ピクセル</button>
+  <button class="filter-btn" data-cat="paper" onclick="setFilter('paper', this)">📄 ペーパークラフト</button>
+  <button class="filter-btn" data-cat="ads" onclick="setFilter('ads', this)">📢 広告</button>
+  <button class="filter-btn" data-cat="misc" onclick="setFilter('misc', this)">✨ その他</button>
+</div>
+
+<div id="gallery"></div>
+
+<script>
+const styles = [
+  // === シネマティック・写真系 ===
+  { cat: "cinematic", name: "cinematic-default", file: "cinematic-default", desc: "映画的な雰囲気。ボケ感、フィルムグレイン、ムーディで壮大な仕上がり", prompt: "cinematic still [prompt] . emotional, harmonious, vignette, highly detailed, high budget, bokeh, cinemascope, moody, epic, gorgeous, film grain, grainy", neg: "anime, cartoon, graphic, text, painting, crayon, graphite, abstract, glitch, deformed, mutated, ugly, disfigured" },
+  { cat: "cinematic", name: "sai-cinematic", file: "sai-cinematic", desc: "映画のワンシーン風。浅い被写界深度、ビネット、壮大なフィルム感", prompt: "cinematic film still [prompt] . shallow depth of field, vignette, highly detailed, high budget, bokeh, cinemascope, moody, epic, gorgeous, film grain, grainy", neg: "anime, cartoon, graphic, text, painting, crayon, graphite, abstract, glitch, deformed, mutated, ugly, disfigured" },
+  { cat: "cinematic", name: "cinematic-diva", file: "cinematic-diva", desc: "UHD 8K高解像度のシネマティック写真。美しいライティング", prompt: "UHD, 8K, ultra detailed, a cinematic photograph of [prompt], beautiful lighting, great composition", neg: "ugly, deformed, noisy, blurry, NSFW" },
+  { cat: "cinematic", name: "sai-photographic", file: "sai-photographic", desc: "35mmフィルム写真風。ボケ、プロフェッショナルな4K仕上がり", prompt: "cinematic photo [prompt] . 35mm photograph, film, bokeh, professional, 4k, highly detailed", neg: "drawing, painting, crayon, sketch, graphite, impressionist, noisy, blurry, soft, deformed, ugly" },
+  { cat: "cinematic", name: "sai-analog film", file: "sai-analog film", desc: "アナログフィルム風。色あせ、粒子感、ビンテージ、コダクローム風", prompt: "analog film photo [prompt] . faded film, desaturated, 35mm photo, grainy, vignette, vintage, Kodachrome, Lomography, stained, highly detailed, found footage", neg: "painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured" },
+  { cat: "cinematic", name: "photo-hdr", file: "photo-hdr", desc: "HDR写真。高ダイナミックレンジ、鮮やか、リアルで強いコントラスト", prompt: "HDR photo of [prompt] . High dynamic range, vivid, rich details, clear shadows and highlights, realistic, intense, enhanced contrast, highly detailed", neg: "flat, low contrast, oversaturated, underexposed, overexposed, blurred, noisy" },
+  { cat: "cinematic", name: "photo-long exposure", file: "photo-long exposure", desc: "長時間露光。動きのブレ、光の筋、幻想的でドリーミーな効果", prompt: "long exposure photo of [prompt] . Blurred motion, streaks of light, surreal, dreamy, ghosting effect, highly detailed", neg: "static, noisy, deformed, shaky, abrupt, flat, low contrast" },
+  { cat: "cinematic", name: "photo-tilt-shift", file: "photo-tilt-shift", desc: "チルトシフト写真。ミニチュア効果、選択的フォーカス", prompt: "tilt-shift photo of [prompt] . Selective focus, miniature effect, blurred background, highly detailed, vibrant, perspective control", neg: "blurry, noisy, deformed, flat, low contrast, unrealistic, oversaturated, underexposed" },
+  { cat: "cinematic", name: "photo-film noir", file: "photo-film noir", desc: "フィルム・ノワール。モノクロ、ハイコントラスト、1940年代ミステリー風", prompt: "film noir style [prompt] . monochrome, high contrast, dramatic shadows, 1940s style, mysterious, cinematic", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, vibrant, colorful" },
+  { cat: "cinematic", name: "photo-neon noir", file: "photo-neon noir", desc: "ネオン・ノワール。サイバーパンク、雨の街、ネオンサイン", prompt: "neon noir [prompt] . cyberpunk, dark, rainy streets, neon signs, high contrast, low light, vibrant, highly detailed", neg: "bright, sunny, daytime, low contrast, black and white, sketch, watercolor" },
+  { cat: "cinematic", name: "photo-silhouette", file: "photo-silhouette", desc: "シルエット。ハイコントラスト、白黒、ミニマル、ドラマティック", prompt: "silhouette style [prompt] . high contrast, minimalistic, black and white, stark, dramatic", neg: "ugly, deformed, noisy, blurry, low contrast, color, realism, photorealistic" },
+  { cat: "cinematic", name: "photo-alien", file: "photo-alien", desc: "エイリアン・宇宙テーマ。異世界、コズミック、SF", prompt: "alien-themed [prompt] . extraterrestrial, cosmic, otherworldly, mysterious, sci-fi, highly detailed", neg: "earthly, mundane, common, realistic, simple" },
+  { cat: "cinematic", name: "Faded Polaroid Photo", file: "Faded_Polaroid_Photo", desc: "色あせたポラロイド写真。アナログ、ビンテージ", prompt: "Faded Polaroid Photo, [prompt], analog, old faded photo, old polaroid", neg: "ugly, deformed, noisy, blurry, low contrast, vibrant, colorful" },
+  { cat: "cinematic", name: "Knolling Photography", file: "Knolling_Photography", desc: "整列配置写真。物をきれいに並べたフラットレイ撮影", prompt: "Knolling Photography, [prompt], flat lay photography, object arrangment, knolling photography", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "cinematic", name: "Macro Photography", file: "Macro_Photography", desc: "マクロ撮影。接写100mm、クローズアップ", prompt: "Macro Photography, [prompt], close-up, macro 100mm, macro photography", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "cinematic", name: "Double Exposure", file: "Double_Exposure", desc: "二重露光。ゴーストのような透け感、画像の合成効果", prompt: "Double Exposure Style, [prompt], double image ghost effect, image combination, double exposure style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+
+  // === アニメ・イラスト系 ===
+  { cat: "anime", name: "sai-anime", file: "sai-anime", desc: "アニメ風。鮮やかな色彩、スタジオアニメ品質", prompt: "anime artwork [prompt] . anime style, key visual, vibrant, studio anime,  highly detailed", neg: "photo, deformed, black and white, realism, disfigured, low contrast" },
+  { cat: "anime", name: "misc-manga", file: "misc-manga", desc: "マンガ風。日本のコミックスタイル、ハイエナジー", prompt: "manga style [prompt] . vibrant, high-energy, detailed, iconic, Japanese comic style", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, Western comic style" },
+  { cat: "anime", name: "misc-kawaii", file: "misc-kawaii", desc: "かわいい系。明るい色、アニメ影響のある愛らしいスタイル", prompt: "kawaii style [prompt] . cute, adorable, brightly colored, cheerful, anime influence, highly detailed", neg: "dark, scary, realistic, monochrome, abstract" },
+  { cat: "anime", name: "Adorable Kawaii", file: "Adorable_Kawaii", desc: "かわいい系。プリティ、キュート、カワイイ", prompt: "Adorable Kawaii, [prompt], pretty, cute, adorable, kawaii", neg: "ugly, deformed, noisy, blurry, low contrast, gothic, dark, moody, monochromatic" },
+  { cat: "anime", name: "sai-digital art", file: "sai-digital art", desc: "デジタルアート。コンセプトアート、マットペインティング", prompt: "concept art [prompt] . digital artwork, illustrative, painterly, matte painting, highly detailed", neg: "photo, photorealistic, realism, ugly" },
+  { cat: "anime", name: "sai-fantasy art", file: "sai-fantasy art", desc: "ファンタジーアート。天上的、壮大、魔法的、ドリーミー", prompt: "ethereal fantasy concept art of  [prompt] . magnificent, celestial, ethereal, painterly, epic, majestic, magical, fantasy art, cover art, dreamy", neg: "photographic, realistic, realism, 35mm film, dslr, cropped, frame, text, deformed, glitch, noise, noisy, off-center, deformed, cross-eyed, closed eyes, bad anatomy, ugly, disfigured, sloppy, duplicate, mutated, black and white" },
+  { cat: "anime", name: "sai-comic book", file: "sai-comic book", desc: "コミックブック。グラフィックイラスト、鮮やかなコミックアート", prompt: "comic [prompt] . graphic illustration, comic art, graphic novel art, vibrant, highly detailed", neg: "photograph, deformed, glitch, noisy, realistic, stock photo" },
+  { cat: "anime", name: "sai-line art", file: "sai-line art", desc: "線画。プロフェッショナル、モダン、ベクターグラフィックス", prompt: "line art drawing [prompt] . professional, sleek, modern, minimalist, graphic, line art, vector graphics", neg: "anime, photorealistic, 35mm film, deformed, glitch, blurry, noisy, off-center, deformed, cross-eyed, closed eyes, bad anatomy, ugly, disfigured, mutated, realism, realistic, impressionism, expressionism, oil, acrylic" },
+  { cat: "anime", name: "Pencil Sketch Drawing", file: "Pencil_Sketch_Drawing", desc: "鉛筆スケッチ。白黒、グラファイト描画", prompt: "Pencil Sketch Drawing, [prompt], black and white drawing, graphite drawing", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "anime", name: "Colored Pencil Art", file: "Colored_Pencil_Art", desc: "色鉛筆画。薄い色、紙のテクスチャ", prompt: "Colored Pencil Art, [prompt], colored pencil strokes, light color, visible paper texture, colored pencil art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "anime", name: "Marker Drawing", file: "Marker_Drawing", desc: "マーカー画。太いマーカーライン、紙のテクスチャ", prompt: "Marker Drawing, [prompt], bold marker lines, visibile paper texture, marker drawing", neg: "ugly, deformed, noisy, blurry, low contrast, photograph, realistic" },
+  { cat: "anime", name: "Cel Shaded Art", file: "Cel_Shaded_Art", desc: "セルシェーディング。2D、フラットカラー", prompt: "Cel Shaded Art, [prompt], 2D, flat color, toon shading, cel shaded style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "anime", name: "Flat 2D Art", file: "Flat_2D_Art", desc: "フラット2Dアート。シンプル、フラットカラー", prompt: "Flat 2D Art, [prompt], simple flat color, 2-dimensional, Flat 2D Art Style", neg: "ugly, deformed, noisy, blurry, low contrast, 3D, photo, realistic" },
+  { cat: "anime", name: "Conceptual Art", file: "Conceptual_Art", desc: "コンセプトアート", prompt: "Conceptual Art, [prompt], concept art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "anime", name: "Character Design Sheet", file: "Character_Design_Sheet", desc: "キャラクターデザインシート", prompt: "Character Design Sheet, [prompt], character reference sheet, character turn around", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "anime", name: "Doodle Art", file: "Doodle_Art", desc: "落書きアート。フリーフォーム、渦巻きパターン", prompt: "Doodle Art Style, [prompt], drawing, freeform, swirling patterns, doodle art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "anime", name: "Infographic Drawing", file: "Infographic_Drawing", desc: "インフォグラフィック。図解、ダイアグラム", prompt: "Infographic Drawing, [prompt], diagram, infographic", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "anime", name: "Caricature", file: "Caricature", desc: "カリカチュア（風刺画）。誇張、コミカル", prompt: "Caricature, [prompt], exaggerated, comical, caricature", neg: "ugly, deformed, noisy, blurry, low contrast, realistic" },
+  { cat: "anime", name: "Fortnite Art Style", file: "Fortnite_Art_Style", desc: "フォートナイト風。3Dカートゥーン", prompt: "Fortnite Art Style, [prompt], 3D cartoon, colorful, Fortnite Art Style", neg: "ugly, deformed, noisy, blurry, low contrast, photo, realistic" },
+
+  // === 絵画・美術スタイル系 ===
+  { cat: "painting", name: "artstyle-watercolor", file: "artstyle-watercolor", desc: "水彩画。鮮やか、ペインタリー、テクスチャル", prompt: "watercolor painting [prompt] . vibrant, beautiful, painterly, detailed, textural, artistic", neg: "anime, photorealistic, 35mm film, deformed, glitch, low contrast, noisy" },
+  { cat: "painting", name: "Watercolor 2", file: "Watercolor_2", desc: "水彩画2。紙テクスチャ、カラーウォッシュ", prompt: "Watercolor style painting, [prompt], visible paper texture, colorwash, watercolor", neg: "ugly, deformed, noisy, blurry, low contrast, photo, realistic" },
+  { cat: "painting", name: "artstyle-impressionist", file: "artstyle-impressionist", desc: "印象派。ゆるい筆致、鮮やかな色、光と影", prompt: "impressionist painting [prompt] . loose brushwork, vibrant color, light and shadow play, captures feeling over form", neg: "anime, photorealistic, 35mm film, deformed, glitch, low contrast, noisy" },
+  { cat: "painting", name: "Impressionism", file: "Impressionism", desc: "印象派。小さな筆致が見えるスタイル", prompt: "Impressionism, [prompt], painterly, small brushstrokes, visible brushstrokes, impressionistic style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Neo-Impressionism", file: "Neo-Impressionism", desc: "新印象派。点描法（ポインティリズム）", prompt: "Neo-Impressionism, [prompt], tiny dabs of color, Pointillism, painterly, Neo-Impressionism", neg: "ugly, deformed, noisy, blurry, low contrast, photograph, realistic" },
+  { cat: "painting", name: "artstyle-pointillism", file: "artstyle-pointillism", desc: "点描画。小さな色の点で構成", prompt: "pointillism style [prompt] . composed entirely of small, distinct dots of color, vibrant, highly detailed", neg: "line drawing, smooth shading, large color fields, simplistic" },
+  { cat: "painting", name: "artstyle-abstract", file: "artstyle-abstract", desc: "抽象画。非具象、色と形の表現", prompt: "abstract style [prompt] . non-representational, colors and shapes, expression of feelings, imaginative, highly detailed", neg: "realistic, photographic, figurative, concrete" },
+  { cat: "painting", name: "artstyle-abstract expressionism", file: "artstyle-abstract expressionism", desc: "抽象表現主義。エネルギッシュな筆致", prompt: "abstract expressionist painting [prompt] . energetic brushwork, bold colors, abstract forms, expressive, emotional", neg: "realistic, photorealistic, low contrast, plain, simple, monochrome" },
+  { cat: "painting", name: "Abstract Expressionism", file: "Abstract_Expressionism", desc: "抽象表現主義。ハイコントラスト", prompt: "Abstract Expressionism Art, [prompt], High contrast, minimalistic, colorful, stark, dramatic, expressionism", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic" },
+  { cat: "painting", name: "artstyle-cubist", file: "artstyle-cubist", desc: "キュビスム。幾何学的形状、抽象的", prompt: "cubist artwork [prompt] . geometric shapes, abstract, innovative, revolutionary", neg: "anime, photorealistic, 35mm film, deformed, glitch, low contrast, noisy" },
+  { cat: "painting", name: "Cubism", file: "Cubism", desc: "キュビスム。フラットな幾何学形態", prompt: "Cubism Art, [prompt], flat geometric forms, cubism art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "artstyle-expressionist", file: "artstyle-expressionist", desc: "表現主義。感情的な歪み、鮮やかな色", prompt: "expressionist [prompt] . raw, emotional, dynamic, distortion for emotional effect, vibrant, use of unusual colors, detailed", neg: "realism, symmetry, quiet, calm, photo" },
+  { cat: "painting", name: "Expressionism", file: "Expressionism", desc: "表現主義。動き、コントラスト、誇張", prompt: "Expressionism Art Style, [prompt], movement, contrast, emotional, exaggerated forms, expressionism art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "artstyle-surrealist", file: "artstyle-surrealist", desc: "シュルレアリスム。夢のような、神秘的", prompt: "surrealist art [prompt] . dreamlike, mysterious, provocative, symbolic, intricate, detailed", neg: "anime, photorealistic, realistic, deformed, glitch, noisy, low contrast" },
+  { cat: "painting", name: "Surrealism", file: "Surrealism", desc: "シュルレアリスム。有機的な線と形", prompt: "Surrealism, [prompt], expressive, dramatic, organic lines and forms, dreamlike and mysterious, Surrealism", neg: "ugly, deformed, noisy, blurry, low contrast, realistic" },
+  { cat: "painting", name: "artstyle-art deco", file: "artstyle-art deco", desc: "アールデコ。幾何学模様、大胆な色彩", prompt: "Art Deco style [prompt] . geometric shapes, bold colors, luxurious, elegant, decorative, symmetrical, ornate, detailed", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, modernist, minimalist" },
+  { cat: "painting", name: "Art Deco", file: "Art_Deco", desc: "アールデコ。スリーク、幾何学的フォルム", prompt: "Art Deco, [prompt], sleek, geometric forms, art deco style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "artstyle-art nouveau", file: "artstyle-art nouveau", desc: "アールヌーボー。曲線的フォルム、自然着想", prompt: "Art Nouveau style [prompt] . elegant, decorative, curvilinear forms, nature-inspired, ornate, detailed", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, modernist, minimalist" },
+  { cat: "painting", name: "Art Nouveau", file: "Art_Nouveau", desc: "アールヌーボー。有機的な形態、華麗", prompt: "Art Nouveau, beautiful art, [prompt], sleek, organic forms, long, sinuous, art nouveau style", neg: "ugly, deformed, noisy, blurry, low contrast, industrial, mechanical" },
+  { cat: "painting", name: "artstyle-renaissance", file: "artstyle-renaissance", desc: "ルネサンス。遠近法、光と影", prompt: "Renaissance style [prompt] . realistic, perspective, light and shadow, religious or mythological themes, highly detailed", neg: "ugly, deformed, noisy, blurry, low contrast, modernist, minimalist, abstract" },
+  { cat: "painting", name: "artstyle-hyperrealism", file: "artstyle-hyperrealism", desc: "ハイパーリアリズム。写真を超えるリアルさ", prompt: "hyperrealistic art [prompt] . extremely high-resolution details, photographic, realism pushed to extreme, fine texture, incredibly lifelike", neg: "simplified, abstract, unrealistic, impressionistic, low resolution" },
+  { cat: "painting", name: "artstyle-constructivist", file: "artstyle-constructivist", desc: "構成主義。幾何学形状、プロパガンダ風", prompt: "constructivist style [prompt] . geometric shapes, bold colors, dynamic composition, propaganda art style", neg: "realistic, photorealistic, low contrast, plain, simple, abstract expressionism" },
+  { cat: "painting", name: "Constructivism", file: "Constructivism", desc: "構成主義。ミニマル、幾何学形態", prompt: "Constructivism Art, [prompt], minimalistic, geometric forms, constructivism art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "artstyle-pop art", file: "artstyle-pop art", desc: "ポップアート。鮮やかな色、太い輪郭線", prompt: "Pop Art style [prompt] . bright colors, bold outlines, popular culture themes, ironic or kitsch", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, minimalist" },
+  { cat: "painting", name: "Pop Art 2", file: "Pop_Art_2", desc: "ポップアート2。ビビッドカラー、強い線", prompt: "Pop Art, [prompt], vivid colors, flat color, 2D, strong lines, Pop Art", neg: "ugly, deformed, noisy, blurry, low contrast, photo, realistic" },
+  { cat: "painting", name: "artstyle-graffiti", file: "artstyle-graffiti", desc: "グラフィティ。ストリートアート、都会的", prompt: "graffiti style [prompt] . street art, vibrant, urban, detailed, tag, mural", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic" },
+  { cat: "painting", name: "Graffiti Art", file: "Graffiti_Art", desc: "グラフィティアート。鮮やかなストリートアート", prompt: "Graffiti Art Style, [prompt], dynamic, dramatic, vibrant colors, graffiti art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "artstyle-psychedelic", file: "artstyle-psychedelic", desc: "サイケデリック。渦巻き、シュール", prompt: "psychedelic style [prompt] . vibrant colors, swirling patterns, abstract forms, surreal, trippy", neg: "monochrome, black and white, low contrast, realistic, photorealistic, plain, simple" },
+  { cat: "painting", name: "artstyle-typography", file: "artstyle-typography", desc: "タイポグラフィアート。テキストベース", prompt: "typographic art [prompt] . stylized, intricate, detailed, artistic, text-based", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic" },
+  { cat: "painting", name: "artstyle-steampunk", file: "artstyle-steampunk", desc: "スチームパンク。アンティーク、歯車", prompt: "steampunk style [prompt] . antique, mechanical, brass and copper tones, gears, intricate, detailed", neg: "deformed, glitch, noisy, low contrast, anime, photorealistic" },
+  { cat: "painting", name: "Steampunk 2", file: "Steampunk_2", desc: "スチームパンク2。蒸気動力、ネオビクトリアン", prompt: "Steampunk, [prompt], retrofuturistic science fantasy, steam-powered tech, vintage industry, gears, neo-victorian, steampunk", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Fauvism", file: "Fauvism", desc: "フォーヴィスム。大胆な色、テクスチャ筆致", prompt: "Fauvism Art, [prompt], painterly, bold colors, textured brushwork, fauvism art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Baroque", file: "Baroque", desc: "バロック。ドラマティック、豪勢、壮大", prompt: "Baroque, [prompt], dramatic, exuberant, grandeur, baroque art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Neo-Baroque", file: "Neo-Baroque", desc: "ネオバロック。装飾的で精巧、ダイナミック", prompt: "Neo-Baroque, [prompt], ornate and elaborate, dynaimc, Neo-Baroque", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Rococo", file: "Rococo", desc: "ロココ。パステルカラー、曲線、精密ディテール", prompt: "Rococo, [prompt], flamboyant, pastel colors, curved lines, elaborate detail, Rococo", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Neo-Rococo", file: "Neo-Rococo", desc: "ネオロココ。華麗な装飾、自然的装飾", prompt: "Neo-Rococo, [prompt], curved forms, naturalistic ornamentation, elaborate, decorative, gaudy, Neo-Rococo", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Neoclassicism", file: "Neoclassicism", desc: "新古典主義。古代ローマ・ギリシャ着想", prompt: "Neoclassicism, [prompt], ancient Rome and Greece inspired, idealic, sober colors, Neoclassicism", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Neo-Byzantine", file: "Neo-Byzantine", desc: "ネオビザンティン。壮大な宗教スタイル", prompt: "Neo-Byzantine, [prompt], grand decorative religious style, Orthodox Christian inspired, Neo-Byzantine", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Classicism Art", file: "Classicism_Art", desc: "古典主義。調和と明晰さ", prompt: "Classicism Art, [prompt], inspired by Roman and Greek culture, clarity, harmonious, classicism art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Medievalism", file: "Medievalism", desc: "中世風。精巧なパターンと装飾", prompt: "Medievalism, [prompt], inspired by The Middle Ages, medieval art, elaborate patterns and decoration, Medievalism", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Dadaism", file: "Dadaism", desc: "ダダイズム。風刺的、無意味、アバンギャルド", prompt: "Dadaism Art, [prompt], satirical, nonsensical, dadaism art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Avant-garde", file: "Avant-garde", desc: "アヴァンギャルド。型破り、実験的", prompt: "Avant-garde, [prompt], unusual, experimental, avant-garde art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Color Field Painting", file: "Color_Field_Painting", desc: "カラーフィールド。抽象、シンプル", prompt: "Color Field Painting, [prompt], abstract, simple, geometic, color field painting style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Op Art", file: "Op_Art", desc: "オプアート。錯視、幾何学パターン", prompt: "Op Art, [prompt], optical illusion, abstract, geometric pattern, impression of movement, Op Art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Suprematism", file: "Suprematism", desc: "シュプレマティスム。抽象、幾何学形態", prompt: "Suprematism, [prompt], abstract, limited color palette, geometric forms, Suprematism", neg: "ugly, deformed, noisy, blurry, low contrast, realistic" },
+  { cat: "painting", name: "Futurism", file: "Futurism", desc: "未来派。ダイナミック、ドラマティック", prompt: "Futurism Art Style, [prompt], dynamic, dramatic, Futurism Art Style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Harlem Renaissance Art", file: "Harlem_Renaissance_Art", desc: "ハーレム・ルネサンス。1920年代アフリカ系文化", prompt: "Harlem Renaissance Art Style, [prompt], dynamic, dramatic, 1920s African American culture, Harlem Renaissance art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Dripping Paint Splatter Art", file: "Dripping_Paint_Splatter_Art", desc: "飛び散るペイント。絵の具の滴り", prompt: "Dripping Paint Splatter Art, [prompt], dramatic, paint drips, splatters, dripping paint", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "Japanese Ink Drawing", file: "Japanese_Ink_Drawing", desc: "日本の墨絵。墨画、インクウォッシュ", prompt: "Japanese Ink Drawing, [prompt], ink drawing, inkwash, Japanese Ink Drawing", neg: "ugly, deformed, noisy, blurry, low contrast, colorful, vibrant" },
+  { cat: "painting", name: "Ink Dripping Drawing", file: "Ink_Dripping_Drawing", desc: "滴るインク画。モノクロ基調", prompt: "Ink Dripping Drawing, [prompt], ink drawing, dripping ink", neg: "ugly, deformed, noisy, blurry, low contrast, colorful, vibrant" },
+  { cat: "painting", name: "Mandola Art", file: "Mandola_Art", desc: "マンダラアート。複雑な円形デザイン", prompt: "Mandola art style, [prompt], complex, circular design, mandola", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "painting", name: "DMT Art Style", file: "DMT_Art_Style", desc: "DMTアート。鮮やかな色、渦巻きパターン", prompt: "DMT Art Style, [prompt], bright colors, surreal visuals, swirling patterns, DMT art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+
+  // === ファンタジー・ダーク系 ===
+  { cat: "dark", name: "misc-fairy tale", file: "misc-fairy tale", desc: "おとぎ話。魔法的、幻想的、絵本スタイル", prompt: "fairy tale [prompt] . magical, fantastical, enchanting, storybook style, highly detailed", neg: "realistic, modern, ordinary, mundane" },
+  { cat: "dark", name: "misc-dreamscape", file: "misc-dreamscape", desc: "夢の風景。シュール、幻想的、ドリーミー", prompt: "dreamscape [prompt] . surreal, ethereal, dreamy, mysterious, fantasy, highly detailed", neg: "realistic, concrete, ordinary, mundane" },
+  { cat: "dark", name: "Astral Aura", file: "Astral_Aura", desc: "アストラルオーラ。カラフルなオーラ", prompt: "Astral Aura, [prompt], astral, colorful aura, vibrant energy", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "dark", name: "Dark Fantasy", file: "Dark_Fantasy", desc: "ダークファンタジー。暗いムーディなスタイル", prompt: "Dark Fantasy Art, [prompt], dark, moody, dark fantasy style", neg: "ugly, deformed, noisy, blurry, low contrast, bright, sunny" },
+  { cat: "dark", name: "Dark Moody Atmosphere", file: "Dark_Moody_Atmosphere", desc: "暗くムーディな雰囲気。ドラマティック", prompt: "Dark Moody Atmosphere, [prompt], dramatic, mysterious, dark moody atmosphere", neg: "ugly, deformed, noisy, blurry, low contrast, vibrant, colorful, bright" },
+  { cat: "dark", name: "misc-gothic", file: "misc-gothic", desc: "ゴシック。暗く神秘的、荘厳で装飾的", prompt: "gothic style [prompt] . dark, mysterious, haunting, dramatic, ornate, detailed", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, cheerful, optimistic" },
+  { cat: "dark", name: "misc-horror", file: "misc-horror", desc: "ホラー。不気味、暗くスプーキー", prompt: "horror-themed [prompt] . eerie, unsettling, dark, spooky, suspenseful, grim, highly detailed", neg: "cheerful, bright, vibrant, light-hearted, cute" },
+  { cat: "dark", name: "misc-lovecraftian", file: "misc-lovecraftian", desc: "ラヴクラフト的ホラー。宇宙的恐怖", prompt: "lovecraftian horror [prompt] . eldritch, cosmic horror, unknown, mysterious, surreal, highly detailed", neg: "light-hearted, mundane, familiar, simplistic, realistic" },
+  { cat: "dark", name: "misc-macabre", file: "misc-macabre", desc: "マカーブル。暗いゴシック、陰鬱", prompt: "macabre style [prompt] . dark, gothic, grim, haunting, highly detailed", neg: "bright, cheerful, light-hearted, cartoonish, cute" },
+  { cat: "dark", name: "misc-dystopian", file: "misc-dystopian", desc: "ディストピア。ポストアポカリプス、荒廃", prompt: "dystopian style [prompt] . bleak, post-apocalyptic, somber, dramatic, highly detailed", neg: "ugly, deformed, noisy, blurry, low contrast, cheerful, optimistic, vibrant, colorful" },
+
+  // === 未来・SF系 ===
+  { cat: "future", name: "futuristic-futuristic", file: "futuristic-futuristic", desc: "未来的。スリーク、ウルトラモダン", prompt: "futuristic style [prompt] . sleek, modern, ultramodern, high tech, detailed", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, vintage, antique" },
+  { cat: "future", name: "futuristic-cybernetic", file: "futuristic-cybernetic", desc: "サイバネティック。ロボティクス、AI", prompt: "cybernetic style [prompt] . futuristic, technological, cybernetic enhancements, robotics, artificial intelligence themes", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, historical, medieval" },
+  { cat: "future", name: "futuristic-cybernetic robot", file: "futuristic-cybernetic robot", desc: "サイバネティックロボット。アンドロイド", prompt: "cybernetic robot [prompt] . android, AI, machine, metal, wires, tech, futuristic, highly detailed", neg: "organic, natural, human, sketch, watercolor, low contrast" },
+  { cat: "future", name: "futuristic-biomechanical", file: "futuristic-biomechanical", desc: "バイオメカニカル。有機物と機械の融合", prompt: "biomechanical style [prompt] . blend of organic and mechanical elements, futuristic, cybernetic, detailed, intricate", neg: "natural, rustic, primitive, organic, simplistic" },
+  { cat: "future", name: "futuristic-cyberpunk cityscape", file: "futuristic-cyberpunk cityscape", desc: "サイバーパンク都市。ネオン、摩天楼", prompt: "cyberpunk cityscape [prompt] . neon lights, dark alleys, skyscrapers, futuristic, vibrant colors, high contrast, highly detailed", neg: "natural, rural, deformed, low contrast, black and white, sketch, watercolor" },
+  { cat: "future", name: "futuristic-biomechanical cyberpunk", file: "futuristic-biomechanical cyberpunk", desc: "バイオメカニカル・サイバーパンク", prompt: "biomechanical cyberpunk [prompt] . cybernetics, human-machine fusion, dystopian, organic meets artificial, dark, intricate, highly detailed", neg: "natural, colorful, deformed, sketch, low contrast, watercolor" },
+  { cat: "future", name: "sai-neonpunk", file: "sai-neonpunk", desc: "ネオンパンク。ヴェイパーウェイヴ、ネオン", prompt: "neonpunk style [prompt] . cyberpunk, vaporwave, neon, vibes, vibrant, stunningly beautiful, crisp, detailed, sleek, ultramodern, magenta highlights, dark purple shadows, high contrast, cinematic, ultra detailed, intricate, professional", neg: "painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured" },
+  { cat: "future", name: "futuristic-retro cyberpunk", file: "futuristic-retro cyberpunk", desc: "レトロサイバーパンク。80年代風", prompt: "retro cyberpunk [prompt] . 80's inspired, synthwave, neon, vibrant, detailed, retro futurism", neg: "modern, desaturated, black and white, realism, low contrast" },
+  { cat: "future", name: "futuristic-retro futurism", file: "futuristic-retro futurism", desc: "レトロフューチャリズム。50-60年代SF", prompt: "retro-futuristic [prompt] . vintage sci-fi, 50s and 60s style, atomic age, vibrant, highly detailed", neg: "contemporary, realistic, rustic, primitive" },
+  { cat: "future", name: "futuristic-vaporwave", file: "futuristic-vaporwave", desc: "ヴェイパーウェイヴ。80-90年代ビンテージ", prompt: "vaporwave style [prompt] . retro aesthetic, cyberpunk, vibrant, neon colors, vintage 80s and 90s style, highly detailed", neg: "monochrome, muted colors, realism, rustic, minimalist, dark" },
+  { cat: "future", name: "futuristic-sci-fi", file: "futuristic-sci-fi", desc: "サイエンスフィクション。宇宙テーマ", prompt: "sci-fi style [prompt] . futuristic, technological, alien worlds, space themes, advanced civilizations", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, historical, medieval" },
+  { cat: "future", name: "misc-space", file: "misc-space", desc: "宇宙テーマ。星、銀河、星雲、惑星", prompt: "space-themed [prompt] . cosmic, celestial, stars, galaxies, nebulas, planets, science fiction, highly detailed", neg: "earthly, mundane, ground-based, realism" },
+  { cat: "future", name: "Neo-Futurism", file: "Neo-Futurism", desc: "ネオフューチャリズム。ハイテク、曲線", prompt: "Neo-Futurism, [prompt], high-tech, curves, spirals, flowing lines, idealistic future, Neo-Futurism", neg: "ugly, deformed, noisy, blurry, low contrast" },
+
+  // === ゲーム系 ===
+  { cat: "game", name: "game-retro arcade", file: "game-retro arcade", desc: "レトロアーケード。8bit、80-90年代", prompt: "retro arcade style [prompt] . 8-bit, pixelated, vibrant, classic video game, old school gaming, reminiscent of 80s and 90s arcade games", neg: "modern, ultra-high resolution, photorealistic, 3D" },
+  { cat: "game", name: "game-retro game", file: "game-retro game", desc: "レトロゲーム。16bit、ノスタルジック", prompt: "retro game art [prompt] . 16-bit, vibrant colors, pixelated, nostalgic, charming, fun", neg: "realistic, photorealistic, 35mm film, deformed, glitch, low contrast, noisy" },
+  { cat: "game", name: "game-mario", file: "game-mario", desc: "スーパーマリオ風。鮮やか、カートゥーン", prompt: "Super Mario style [prompt] . vibrant, cute, cartoony, fantasy, playful, reminiscent of Super Mario series", neg: "realistic, modern, horror, dystopian, violent" },
+  { cat: "game", name: "game-zelda", file: "game-zelda", desc: "ゼルダの伝説風。ファンタジー、冒険", prompt: "Legend of Zelda style [prompt] . vibrant, fantasy, detailed, epic, heroic, reminiscent of The Legend of Zelda series", neg: "sci-fi, modern, realistic, horror" },
+  { cat: "game", name: "game-pokemon", file: "game-pokemon", desc: "ポケモン風。キュート、アニメ", prompt: "Pokémon style [prompt] . vibrant, cute, anime, fantasy, reminiscent of Pokémon series", neg: "realistic, modern, horror, dystopian, violent" },
+  { cat: "game", name: "game-minecraft", file: "game-minecraft", desc: "マインクラフト風。ブロック状、ピクセル", prompt: "Minecraft style [prompt] . blocky, pixelated, vibrant colors, recognizable characters and objects, game assets", neg: "smooth, realistic, detailed, photorealistic, noise, blurry, deformed" },
+  { cat: "game", name: "game-bubble bobble", file: "game-bubble bobble", desc: "バブルボブル風。8bit、キュート", prompt: "Bubble Bobble style [prompt] . 8-bit, cute, pixelated, fantasy, vibrant, reminiscent of Bubble Bobble game", neg: "realistic, modern, photorealistic, violent, horror" },
+  { cat: "game", name: "game-fighting game", file: "game-fighting game", desc: "格闘ゲーム風。ダイナミック、アクション", prompt: "fighting game style [prompt] . dynamic, vibrant, action-packed, detailed character design, reminiscent of fighting video games", neg: "peaceful, calm, minimalist, photorealistic" },
+  { cat: "game", name: "game-streetfighter", file: "game-streetfighter", desc: "ストリートファイター風。2D格闘", prompt: "Street Fighter style [prompt] . vibrant, dynamic, arcade, 2D fighting game, highly detailed, reminiscent of Street Fighter series", neg: "3D, realistic, modern, photorealistic, turn-based strategy" },
+  { cat: "game", name: "game-gta", file: "game-gta", desc: "GTA風。風刺的、ポップアート", prompt: "GTA-style artwork [prompt] . satirical, exaggerated, pop art style, vibrant colors, iconic characters, action-packed", neg: "realistic, black and white, low contrast, impressionist, cubist, noisy, blurry, deformed" },
+  { cat: "game", name: "game-cyberpunk game", file: "game-cyberpunk game", desc: "サイバーパンクゲーム。ネオン、未来的", prompt: "cyberpunk game style [prompt] . neon, dystopian, futuristic, digital, vibrant, detailed, high contrast, reminiscent of cyberpunk genre video games", neg: "historical, natural, rustic, low detailed" },
+  { cat: "game", name: "game-rpg fantasy game", file: "game-rpg fantasy game", desc: "RPGファンタジー。没入感のある世界", prompt: "role-playing game (RPG) style fantasy [prompt] . detailed, vibrant, immersive, reminiscent of high fantasy RPG games", neg: "sci-fi, modern, urban, futuristic, low detailed" },
+  { cat: "game", name: "game-strategy game", file: "game-strategy game", desc: "ストラテジー。俯瞰視点、マップ", prompt: "strategy game style [prompt] . overhead view, detailed map, units, reminiscent of real-time strategy video games", neg: "first-person view, modern, photorealistic" },
+
+  // === 3D・ピクセル系 ===
+  { cat: "3d", name: "sai-3d-model", file: "sai-3d-model", desc: "プロ3Dモデル。Octaneレンダー", prompt: "professional 3d model [prompt] . octane render, highly detailed, volumetric, dramatic lighting", neg: "ugly, deformed, noisy, low poly, blurry, painting" },
+  { cat: "3d", name: "Adorable 3D Character", file: "Adorable_3D_Character", desc: "かわいい3Dキャラクター", prompt: "Adorable 3D Character, [prompt], 3D render, adorable character, 3D art", neg: "ugly, deformed, noisy, blurry, low contrast, grunge, sloppy, unkempt, photograph, photo, realistic" },
+  { cat: "3d", name: "sai-lowpoly", file: "sai-lowpoly", desc: "ローポリ。ポリゴンメッシュ、ブロック状", prompt: "low-poly style [prompt] . low-poly game art, polygon mesh, jagged, blocky, wireframe edges, centered composition", neg: "noisy, sloppy, messy, grainy, highly detailed, ultra textured, photo" },
+  { cat: "3d", name: "sai-pixel art", file: "sai-pixel art", desc: "ピクセルアート。8bitグラフィックス", prompt: "pixel-art [prompt] . low-res, blocky, pixel art style, 8-bit graphics", neg: "sloppy, messy, blurry, noisy, highly detailed, ultra textured, photo, realistic" },
+  { cat: "3d", name: "sai-craft clay", file: "sai-craft clay", desc: "クレイ（粘土）。プレイドー風", prompt: "play-doh style [prompt] . sculpture, clay art, centered composition, Claymation", neg: "sloppy, messy, grainy, highly detailed, ultra textured, photo" },
+  { cat: "3d", name: "sai-texture", file: "sai-texture", desc: "テクスチャ。上面クローズアップ", prompt: "texture [prompt] top down close-up", neg: "ugly, deformed, noisy, blurry" },
+  { cat: "3d", name: "sai-isometric", file: "sai-isometric", desc: "アイソメトリック。等角投影、鮮やか", prompt: "isometric style [prompt] . vibrant, beautiful, crisp, detailed, ultra detailed, intricate", neg: "deformed, mutated, ugly, disfigured, blur, blurry, noise, noisy, realistic, photographic" },
+
+  // === ペーパークラフト系 ===
+  { cat: "paper", name: "papercraft-collage", file: "papercraft-collage", desc: "コラージュ。ミクストメディア", prompt: "collage style [prompt] . mixed media, layered, textural, detailed, artistic", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic" },
+  { cat: "paper", name: "papercraft-flat papercut", file: "papercraft-flat papercut", desc: "フラット切り絵。シルエット", prompt: "flat papercut style [prompt] . silhouette, clean cuts, paper, sharp edges, minimalist, color block", neg: "3D, high detail, noise, grainy, blurry, painting, drawing, photo, disfigured" },
+  { cat: "paper", name: "papercraft-kirigami", file: "papercraft-kirigami", desc: "切り紙（キリガミ）。3D、精密", prompt: "kirigami representation of [prompt] . 3D, paper folding, paper cutting, Japanese, intricate, symmetrical, precision, clean lines", neg: "painting, drawing, 2D, noisy, blurry, deformed" },
+  { cat: "paper", name: "papercraft-paper mache", file: "papercraft-paper mache", desc: "張り子。3D彫刻的、手作り感", prompt: "paper mache representation of [prompt] . 3D, sculptural, textured, handmade, vibrant, fun", neg: "2D, flat, photo, sketch, digital art, deformed, noisy, blurry" },
+  { cat: "paper", name: "papercraft-paper quilling", file: "papercraft-paper quilling", desc: "ペーパークイリング。繊細な巻き紙", prompt: "paper quilling art of [prompt] . intricate, delicate, curling, rolling, shaping, coiling, loops, 3D, dimensional, ornamental", neg: "photo, painting, drawing, 2D, flat, deformed, noisy, blurry" },
+  { cat: "paper", name: "papercraft-papercut collage", file: "papercraft-papercut collage", desc: "切り絵コラージュ", prompt: "papercut collage of [prompt] . mixed media, textured paper, overlapping, asymmetrical, abstract, vibrant", neg: "photo, 3D, realistic, drawing, painting, high detail, disfigured" },
+  { cat: "paper", name: "papercraft-papercut shadow box", file: "papercraft-papercut shadow box", desc: "切り絵シャドーボックス", prompt: "3D papercut shadow box of [prompt] . layered, dimensional, depth, silhouette, shadow, papercut, handmade, high contrast", neg: "painting, drawing, photo, 2D, flat, high detail, blurry, noisy, disfigured" },
+  { cat: "paper", name: "papercraft-stacked papercut", file: "papercraft-stacked papercut", desc: "積層切り絵。3D、レイヤード", prompt: "stacked papercut art of [prompt] . 3D, layered, dimensional, depth, precision cut, stacked layers, papercut, high contrast", neg: "2D, flat, noisy, blurry, painting, drawing, photo, deformed" },
+  { cat: "paper", name: "papercraft-thick layered papercut", file: "papercraft-thick layered papercut", desc: "厚手積層切り絵", prompt: "thick layered papercut art of [prompt] . deep 3D, volumetric, dimensional, depth, thick paper, high stack, heavy texture, tangible layers", neg: "2D, flat, thin paper, low stack, smooth texture, painting, drawing, photo, deformed" },
+  { cat: "paper", name: "sai-origami", file: "sai-origami", desc: "折り紙。紙アート、プリーツ", prompt: "origami style [prompt] . paper art, pleated paper, folded, origami art, pleats, cut and fold, centered composition", neg: "noisy, sloppy, messy, grainy, highly detailed, ultra textured, photo" },
+
+  // === 広告系 ===
+  { cat: "ads", name: "ads-advertising", file: "ads-advertising", desc: "広告ポスター。プロフェッショナル", prompt: "Advertising poster style [prompt] . Professional, modern, product-focused, commercial, eye-catching, highly detailed", neg: "noisy, blurry, amateurish, sloppy, unattractive" },
+  { cat: "ads", name: "ads-automotive", file: "ads-automotive", desc: "自動車広告。スリーク、ダイナミック", prompt: "Automotive advertisement style [prompt] . Sleek, dynamic, professional, commercial, vehicle-focused, high-resolution, highly detailed", neg: "noisy, blurry, unattractive, sloppy, unprofessional" },
+  { cat: "ads", name: "ads-corporate", file: "ads-corporate", desc: "企業ブランディング。クリーン、モダン", prompt: "Corporate branding style [prompt] . Professional, clean, modern, sleek, minimalist, business-oriented, highly detailed", neg: "noisy, blurry, grungy, sloppy, cluttered, disorganized" },
+  { cat: "ads", name: "ads-fashion editorial", file: "ads-fashion editorial", desc: "ファッション誌。ハイファッション", prompt: "Fashion editorial style [prompt] . High fashion, trendy, stylish, editorial, magazine style, professional, highly detailed", neg: "outdated, blurry, noisy, unattractive, sloppy" },
+  { cat: "ads", name: "ads-food photography", file: "ads-food photography", desc: "料理写真。食欲をそそる", prompt: "Food photography style [prompt] . Appetizing, professional, culinary, high-resolution, commercial, highly detailed", neg: "unappetizing, sloppy, unprofessional, noisy, blurry" },
+  { cat: "ads", name: "ads-luxury", file: "ads-luxury", desc: "高級品。エレガント、ハイエンド", prompt: "Luxury product style [prompt] . Elegant, sophisticated, high-end, luxurious, professional, highly detailed", neg: "cheap, noisy, blurry, unattractive, amateurish" },
+  { cat: "ads", name: "ads-real estate", file: "ads-real estate", desc: "不動産写真。明るく物件フォーカス", prompt: "Real estate photography style [prompt] . Professional, inviting, well-lit, high-resolution, property-focused, commercial, highly detailed", neg: "dark, blurry, unappealing, noisy, unprofessional" },
+  { cat: "ads", name: "ads-retail", file: "ads-retail", desc: "小売パッケージ。目を引くデザイン", prompt: "Retail packaging style [prompt] . Vibrant, enticing, commercial, product-focused, eye-catching, professional, highly detailed", neg: "noisy, blurry, amateurish, sloppy, unattractive" },
+
+  // === その他 ===
+  { cat: "misc", name: "sai-enhance", file: "sai-enhance", desc: "エンハンス（品質向上）。受賞級品質", prompt: "breathtaking [prompt] . award-winning, professional, highly detailed", neg: "ugly, deformed, noisy, blurry, distorted, grainy" },
+  { cat: "misc", name: "misc-architectural", file: "misc-architectural", desc: "建築スタイル。クリーンライン", prompt: "architectural style [prompt] . clean lines, geometric shapes, minimalist, modern, architectural drawing, highly detailed", neg: "curved lines, ornate, baroque, abstract, grunge" },
+  { cat: "misc", name: "misc-metropolis", file: "misc-metropolis", desc: "メトロポリス。都市景観、摩天楼", prompt: "metropolis-themed [prompt] . urban, cityscape, skyscrapers, modern, futuristic, highly detailed", neg: "rural, natural, rustic, historical, simple" },
+  { cat: "misc", name: "misc-disco", file: "misc-disco", desc: "ディスコ。70年代レトロ、ネオンライト", prompt: "disco-themed [prompt] . vibrant, groovy, retro 70s style, shiny disco balls, neon lights, dance floor, highly detailed", neg: "minimalist, rustic, monochrome, contemporary, simplistic" },
+  { cat: "misc", name: "misc-grunge", file: "misc-grunge", desc: "グランジ。ビンテージ、パンクロック風", prompt: "grunge style [prompt] . textured, distressed, vintage, edgy, punk rock vibe, dirty, noisy", neg: "smooth, clean, minimalist, sleek, modern, photorealistic" },
+  { cat: "misc", name: "misc-monochrome", file: "misc-monochrome", desc: "モノクロ。白黒、コントラスト", prompt: "monochrome [prompt] . black and white, contrast, tone, texture, detailed", neg: "colorful, vibrant, noisy, blurry, deformed" },
+  { cat: "misc", name: "misc-minimalist", file: "misc-minimalist", desc: "ミニマリスト。シンプル、モダン", prompt: "minimalist style [prompt] . simple, clean, uncluttered, modern, elegant", neg: "ornate, complicated, highly detailed, cluttered, disordered, messy, noisy" },
+  { cat: "misc", name: "Minimalism", file: "Minimalism", desc: "ミニマリズム。抽象、幾何学形状", prompt: "Minimalism, [prompt], abstract, simple geometic shapes, hard edges, sleek contours, Minimalism", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "misc-nautical", file: "misc-nautical", desc: "航海テーマ。海、船、マリン", prompt: "nautical-themed [prompt] . sea, ocean, ships, maritime, beach, marine life, highly detailed", neg: "landlocked, desert, mountains, urban, rustic" },
+  { cat: "misc", name: "misc-tribal", file: "misc-tribal", desc: "トライバル。民族的、伝統パターン", prompt: "tribal style [prompt] . indigenous, ethnic, traditional patterns, bold, natural colors, highly detailed", neg: "modern, futuristic, minimalist, pastel" },
+  { cat: "misc", name: "misc-zentangle", file: "misc-zentangle", desc: "ゼンタングル。モノクロ瞑想パターン", prompt: "zentangle [prompt] . intricate, abstract, monochrome, patterns, meditative, highly detailed", neg: "colorful, representative, simplistic, large fields of color" },
+  { cat: "misc", name: "misc-stained glass", file: "misc-stained glass", desc: "ステンドグラス。鮮やか、透明感", prompt: "stained glass style [prompt] . vibrant, beautiful, translucent, intricate, detailed", neg: "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic" },
+  { cat: "misc", name: "misc-techwear fashion", file: "misc-techwear fashion", desc: "テックウェア。サイバーパンク、アーバン", prompt: "techwear fashion [prompt] . futuristic, cyberpunk, urban, tactical, sleek, dark, highly detailed", neg: "vintage, rural, colorful, low contrast, realism, sketch, watercolor" },
+  { cat: "misc", name: "High Fashion", file: "High_Fashion", desc: "ハイファッション。オートクチュール", prompt: "High Fashion, [prompt], dynamic, dramatic, haute couture, elegant, ornate clothing, High Fashion", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Academia", file: "Academia", desc: "アカデミア。アイビーリーグ風", prompt: "Academia, [prompt], preppy Ivy League style, stark, dramatic, chic boarding school, academia", neg: "ugly, deformed, noisy, blurry, low contrast, grunge, sloppy, unkempt" },
+  { cat: "misc", name: "Action Figure", file: "Action_Figure", desc: "アクションフィギュア。コレクタブル", prompt: "Action Figure, [prompt], plastic collectable action figure, collectable toy action figure", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Idyllic", file: "Idyllic", desc: "牧歌的。平和、幸福、調和", prompt: "Idyllic, [prompt], peaceful, happy, pleasant, happy, harmonious, picturesque, charming", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Light Cheery Atmosphere", file: "Light_Cheery_Atmosphere", desc: "明るく陽気な雰囲気", prompt: "Light Cheery Atmosphere, [prompt], happy, joyful, cheerful, carefree, gleeful, lighthearted, pleasant atmosphere", neg: "ugly, deformed, noisy, blurry, low contrast, monochromatic, dark, moody" },
+  { cat: "misc", name: "Tranquil Relaxing Atmosphere", file: "Tranquil_Relaxing_Atmosphere", desc: "穏やかでリラックスした雰囲気", prompt: "Tranquil Relaxing Atmosphere, [prompt], calming style, soothing colors, peaceful, idealic, Tranquil Relaxing Atmosphere", neg: "ugly, deformed, noisy, blurry, low contrast, oversaturated" },
+  { cat: "misc", name: "Luxurious Elegance", file: "Luxurious_Elegance", desc: "豪華なエレガンス。贅沢", prompt: "Luxurious Elegance, [prompt], extravagant, ornate, designer, opulent, picturesque, lavish", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Vibrant Rim Light", file: "Vibrant_Rim_Light", desc: "鮮やかなリムライト。高コントラスト", prompt: "Vibrant Rim Light, [prompt], bright rim light, high contrast, bold edge light", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Volumetric Lighting", file: "Volumetric_Lighting", desc: "ボリューメトリック照明。立体的な光", prompt: "Volumetric Lighting, [prompt], light depth, dramatic atmospheric lighting, Volumetric Lighting", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Ornate and Intricate", file: "Ornate_and_Intricate", desc: "装飾的で精巧。デコラティブ", prompt: "Ornate and Intricate, [prompt], decorative, highly detailed, elaborate, ornate, intricate", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Whimsical and Playful", file: "Whimsical_and_Playful", desc: "気まぐれで遊び心", prompt: "Whimsical and Playful, [prompt], imaginative, fantastical, bight colors, stylized, happy, Whimsical and Playful", neg: "ugly, deformed, noisy, blurry, low contrast, drab, boring, moody" },
+  { cat: "misc", name: "Logo Design", file: "Logo_Design", desc: "ロゴデザイン。ベクターアート", prompt: "Logo Design, [prompt], dynamic graphic art, vector art, minimalist, professional logo design", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Simple Vector Art", file: "Simple_Vector_Art", desc: "シンプルベクターアート。2Dフラット", prompt: "Simple Vector Art, [prompt], 2D flat, simple shapes, minimalistic, professional graphic, flat color, high contrast, Simple Vector Art", neg: "ugly, deformed, noisy, blurry, low contrast, 3D, photo, realistic" },
+  { cat: "misc", name: "Sticker Designs", file: "Sticker_Designs", desc: "ステッカーデザイン", prompt: "Vector Art Stickers, [prompt], professional vector design, sticker designs, Sticker Sheet", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Blueprint Schematic Drawing", file: "Blueprint_Schematic_Drawing", desc: "設計図。技術図面", prompt: "Blueprint Schematic Drawing, [prompt], technical drawing, blueprint, schematic", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Sketchup", file: "Sketchup", desc: "スケッチアップ。CAD設計", prompt: "Sketchup, [prompt], CAD, professional design, Sketchup", neg: "ugly, deformed, noisy, blurry, low contrast, photo, photograph" },
+  { cat: "misc", name: "Bauhaus-Style Poster", file: "Bauhaus-Style_Poster", desc: "バウハウス風ポスター", prompt: "Bauhaus-Style Poster, [prompt], simple geometric shapes, clean lines, primary colors, Bauhaus-Style Poster", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Glitchcore", file: "Glitchcore", desc: "グリッチコア。歪み、デジタルノイズ", prompt: "Glitchcore Art Style, [prompt], dynamic, dramatic, distorted, vibrant colors, glitchcore art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Glo-fi", file: "Glo-fi", desc: "グロウファイ。鮮やかな色彩", prompt: "Glo-fi Art Style, [prompt], dynamic, dramatic, vibrant colors, glo-fi art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Googie Art Style", file: "Googie_Art_Style", desc: "グーギー。1950年代未来主義", prompt: "Googie Art Style, [prompt], dynamic, dramatic, 1950's futurism, bold boomerang angles, Googie art style", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Terragen", file: "Terragen", desc: "テラジェン。壮大な風景", prompt: "Terragen, [prompt], beautiful massive landscape, epic scenery, Terragen", neg: "ugly, deformed, noisy, blurry, low contrast" },
+  { cat: "misc", name: "Silhouette Art", file: "Silhouette_Art", desc: "シルエットアート。ハイコントラスト", prompt: "Silhouette Art, [prompt], high contrast, well defined, Silhouette Art", neg: "ugly, deformed, noisy, blurry, low contrast" },
+];
+
+const catLabels = {
+  cinematic: "🎬 シネマティック・写真系",
+  anime: "🎌 アニメ・イラスト・デジタルアート系",
+  painting: "🖼️ 絵画・美術スタイル系",
+  dark: "🔮 ファンタジー・ダーク・ホラー系",
+  future: "🤖 未来・SF・サイバーパンク系",
+  game: "🎮 ゲーム系",
+  "3d": "🧊 3D・テクスチャ・ピクセル系",
+  paper: "📄 ペーパークラフト系",
+  ads: "📢 広告・ビジネス系",
+  misc: "✨ その他・雰囲気・デザイン系"
+};
+
+const catOrder = ["cinematic","anime","painting","dark","future","game","3d","paper","ads","misc"];
+
+let currentFilter = "all";
+
+function renderGallery() {
+  const gallery = document.getElementById("gallery");
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  gallery.innerHTML = "";
+
+  for (const cat of catOrder) {
+    const items = styles.filter(s => {
+      const matchCat = (currentFilter === "all" || s.cat === currentFilter);
+      const matchSearch = !search || s.name.toLowerCase().includes(search) || s.desc.toLowerCase().includes(search);
+      return s.cat === cat && matchCat && matchSearch;
+    });
+
+    if (items.length === 0) continue;
+
+    const title = document.createElement("div");
+    title.className = "category-title";
+    title.textContent = catLabels[cat] + ` (${items.length})`;
+    gallery.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+
+    for (const item of items) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.cursor = "pointer";
+      card.title = "クリックしてプロンプトを表示";
+      card.onclick = () => openModal(item.name);
+      card.innerHTML = `
+        <img src="style_icons/${item.file.replace(/ /g, '_')}.png" alt="${item.name}" loading="lazy" onerror="this.src='style_icons/${item.file}.png'">
+        <div class="card-body">
+          <div class="card-name" title="${item.name}">${item.name}</div>
+          <div class="card-desc">${item.desc}</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+    gallery.appendChild(grid);
+  }
+}
+
+function setFilter(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderGallery();
+}
+
+function filterCards() {
+  renderGallery();
+}
+
+renderGallery();
+
+function openModal(name) {
+  const item = styles.find(s => s.name === name);
+  if (!item) return;
+  document.getElementById('modalTitle').textContent = item.name;
+  
+  const safeFile = item.file.replace(/ /g, '_');
+  const imgElement = document.getElementById('modalImg');
+  imgElement.src = `style_icons/${safeFile}.png`;
+  imgElement.onerror = function() { this.src = `style_icons/${item.file}.png`; };
+
+  const promptText = document.getElementById('modalPrompt');
+  if (item.prompt && item.prompt.trim() !== '') {
+    let escaped = item.prompt.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    promptText.innerHTML = escaped.replace(/\n/g, '<br>').replace(/\[prompt\]/g, '<strong style="color: #fbbf24;">[prompt]</strong>');
+  } else {
+    promptText.innerHTML = '<span class="prompt-empty">なし</span>';
+  }
+
+  const negText = document.getElementById('modalNeg');
+  if (item.neg && item.neg.trim() !== '') {
+    let escapedNeg = item.neg.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    negText.innerHTML = escapedNeg.replace(/\n/g, '<br>');
+  } else {
+    negText.innerHTML = '<span class="prompt-empty">なし</span>';
+  }
+
+  // コピーボタンをリセット
+  const cpBtn = document.getElementById('copyPromptBtn');
+  const cnBtn = document.getElementById('copyNegBtn');
+  if (cpBtn) { cpBtn.innerHTML = '📋 コピー'; cpBtn.classList.remove('copied'); }
+  if (cnBtn) { cnBtn.innerHTML = '📋 コピー'; cnBtn.classList.remove('copied'); }
+
+  document.getElementById('promptModal').classList.add('show');
+  document.body.style.overflow = 'hidden'; // 背景スクロール防止
+}
+
+function closeModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('promptModal').classList.remove('show');
+  document.body.style.overflow = 'auto'; // 背景スクロール復活
+}
+
+// クリップボードへコピー
+function copyText(elementId, btn) {
+  const el = document.getElementById(elementId);
+  const textToCopy = el.innerText.trim();
+  if (!textToCopy || textToCopy === 'なし') return;
+
+  const showCopied = () => {
+    btn.innerHTML = '✅ コピー完了';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '📋 コピー';
+      btn.classList.remove('copied');
+    }, 2000);
+  };
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(textToCopy).then(showCopied).catch(() => fallbackCopy(textToCopy, showCopied));
+  } else {
+    fallbackCopy(textToCopy, showCopied);
+  }
+}
+
+function fallbackCopy(text, callback) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); callback(); }
+  catch (e) { alert('コピーに失敗しました'); }
+  document.body.removeChild(ta);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
+</script>
+
+<div id="promptModal" class="modal" onclick="closeModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-header">
+      <img id="modalImg" src="" alt="">
+      <div class="modal-title" id="modalTitle">Style Name</div>
+    </div>
+    <div class="prompt-box">
+      <div class="prompt-label">✨ Prompt (プロンプト) <button class="copy-btn" id="copyPromptBtn" onclick="copyText('modalPrompt', this)">📋 コピー</button></div>
+      <div class="prompt-text" id="modalPrompt"></div>
+    </div>
+    <div class="prompt-box">
+      <div class="prompt-label">🚫 Negative Prompt (ネガティブプロンプト) <button class="copy-btn" id="copyNegBtn" onclick="copyText('modalNeg', this)">📋 コピー</button></div>
+      <div class="prompt-text" id="modalNeg"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
